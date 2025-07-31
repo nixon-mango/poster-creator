@@ -1,0 +1,40 @@
+# Backend Dockerfile for Jaaz Python FastAPI server
+FROM python:3.11-slim as base
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash jaaz
+USER jaaz
+WORKDIR /home/jaaz
+
+# Copy requirements and install Python dependencies
+COPY --chown=jaaz:jaaz server/requirements.txt ./requirements.txt
+RUN pip install --user -r requirements.txt
+
+# Copy server code
+COPY --chown=jaaz:jaaz server/ ./server/
+
+# Create directories for React build (will be mounted or copied)
+RUN mkdir -p ./react/dist
+
+# Set environment variables for the application
+ENV UI_DIST_DIR=/home/jaaz/react/dist
+ENV PYTHONPATH=/home/jaaz/server
+
+# Expose the port
+EXPOSE 57988
+
+# Change to server directory and start the application
+WORKDIR /home/jaaz/server
+CMD ["python", "main.py", "--port", "57988"]
