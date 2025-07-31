@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # Backend FastAPI service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: jaaz-backend
+    restart: unless-stopped
+    ports:
+      - "57988:57988"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - UI_DIST_DIR=/home/jaaz/react/dist
+      - PYTHONPATH=/home/jaaz/server
+    volumes:
+      # Mount for persistent data
+      - ./data:/home/jaaz/data
+      # Mount for logs
+      - ./logs:/home/jaaz/logs
+      # Development: mount source code (comment out for production)
+      # - ./server:/home/jaaz/server
+    networks:
+      - jaaz-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:57988/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend React/Nginx service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: jaaz-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    networks:
+      - jaaz-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for session management and WebSocket scaling (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: jaaz-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - jaaz-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: Database service (SQLite is used by default, but you can use PostgreSQL)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: jaaz-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: jaaz
+  #     POSTGRES_USER: jaaz
+  #     POSTGRES_PASSWORD: jaaz_password
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - jaaz-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U jaaz"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+networks:
+  jaaz-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+  # postgres-data:
+  #   driver: local

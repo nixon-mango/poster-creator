@@ -1,0 +1,60 @@
+# Development override for docker-compose.yml
+# This file is automatically loaded when running docker-compose commands
+# Use for development with hot-reload and source mounting
+
+version: '3.8'
+
+services:
+  backend:
+    # Override build for development
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: base
+    environment:
+      - NODE_ENV=development
+      - DEBUG=true
+      - HOT_RELOAD=true
+    volumes:
+      # Mount source code for development
+      - ./server:/home/jaaz/server
+      - ./data:/home/jaaz/data
+      - ./logs:/home/jaaz/logs
+    ports:
+      - "57988:57988"
+      # Add debug port for Python debugging
+      - "5678:5678"
+    # Override command for development
+    command: ["python", "-m", "uvicorn", "main:socket_app", "--host", "0.0.0.0", "--port", "57988", "--reload"]
+
+  frontend:
+    # For development, we can use Vite dev server instead of nginx
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: builder
+    volumes:
+      # Mount source code for hot-reload
+      - ./react:/app
+      - /app/node_modules
+    ports:
+      - "5174:5174"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:57988
+    # Override command to run development server
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
+  # Add development tools
+  adminer:
+    image: adminer:latest
+    container_name: jaaz-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - jaaz-network
+    depends_on:
+      - redis
+    environment:
+      - ADMINER_DEFAULT_SERVER=redis
