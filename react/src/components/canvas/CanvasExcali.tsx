@@ -142,7 +142,6 @@ const CanvasExcali: React.FC<CanvasExcaliProps> = ({
       excalidrawAPI.updateScene({
         appState: {
           viewBackgroundColor: '#121212',
-          gridColor: 'rgba(255, 255, 255, 0.1)',
         }
       })
     } else if (excalidrawAPI && theme === 'light') {
@@ -150,7 +149,6 @@ const CanvasExcali: React.FC<CanvasExcaliProps> = ({
       excalidrawAPI.updateScene({
         appState: {
           viewBackgroundColor: '#ffffff',
-          gridColor: 'rgba(0, 0, 0, 0.1)',
         }
       })
     }
@@ -398,10 +396,10 @@ const CanvasExcali: React.FC<CanvasExcaliProps> = ({
   }, [handleImageGenerated, handleVideoGenerated])
 
   return (
-    <Excalidraw
-      theme={customTheme as Theme}
-      langCode={i18n.language}
-      className={excalidrawClassName}
+    <div className={excalidrawClassName}>
+      <Excalidraw
+        theme={customTheme as Theme}
+        langCode={i18n.language}
       excalidrawAPI={(api) => {
         setExcalidrawAPI(api)
       }}
@@ -435,6 +433,7 @@ const CanvasExcali: React.FC<CanvasExcaliProps> = ({
         }
       }}
     />
+    </div>
   )
 }
 
