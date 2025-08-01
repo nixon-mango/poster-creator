@@ -17,30 +17,17 @@ const CommonDialogContent: React.FC<CommonDialogProps> = ({
 }) => {
   const openState = {
     opacity: 1,
-    filter: 'blur(0px)',
-    rotateX: 0,
-    rotateY: 0,
-    z: 0,
+    scale: 1,
     transition: {
-      duration: 0.5,
-      ease: [0.17, 0.67, 0.51, 1],
-      opacity: {
-        delay: 0.2,
-        duration: 0.4,
-        ease: 'easeOut',
-      },
+      duration: 0.3,
     },
   }
 
   const initialState = {
     opacity: 0,
-    filter: 'blur(12px)',
-    z: -100,
-    rotateY: 5,
-    rotateX: 25,
+    scale: 0.95,
     transition: {
       duration: 0.3,
-      ease: [0.67, 0.17, 0.62, 0.64],
     },
   }
 
